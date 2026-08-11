@@ -68,7 +68,7 @@ export default function ArchiveRow({
           Reopen
         </button>
         <button type="button" className="btn-secondary" onClick={startEdit}>
-          Edit
+          Add note
         </button>
         <button type="button" className="btn-danger" onClick={() => onRequestDelete(task)}>
           Delete
