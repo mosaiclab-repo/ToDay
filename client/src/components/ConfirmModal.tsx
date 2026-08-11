@@ -2,12 +2,14 @@ export default function ConfirmModal({
   title,
   body,
   confirmLabel = 'Confirm',
+  danger = false,
   onConfirm,
   onCancel,
 }: {
   title: string;
   body: string;
   confirmLabel?: string;
+  danger?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -20,7 +22,7 @@ export default function ConfirmModal({
           <button type="button" className="btn-secondary" onClick={onCancel}>
             Cancel
           </button>
-          <button type="button" className="btn-primary" onClick={onConfirm}>
+          <button type="button" className={danger ? 'btn-danger' : 'btn-primary'} onClick={onConfirm}>
             {confirmLabel}
           </button>
         </div>

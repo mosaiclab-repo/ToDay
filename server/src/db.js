@@ -27,7 +27,8 @@ db.exec(`
     time_completed TEXT,
     reopen_count INTEGER NOT NULL DEFAULT 0,
     is_subtask INTEGER NOT NULL DEFAULT 0,
-    parent_task_id TEXT REFERENCES tasks(id)
+    parent_task_id TEXT REFERENCES tasks(id),
+    notes TEXT
   );
 
   CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category);
@@ -47,4 +48,7 @@ db.exec(`
 const existingColumns = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
 if (existingColumns.includes('client_name') && !existingColumns.includes('tag')) {
   db.exec('ALTER TABLE tasks RENAME COLUMN client_name TO tag');
+}
+if (!existingColumns.includes('notes')) {
+  db.exec('ALTER TABLE tasks ADD COLUMN notes TEXT');
 }

@@ -12,6 +12,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Request failed: ${res.status}`);
   }
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -71,6 +72,16 @@ const remoteApi: TodayApi = {
     }),
 
   getTags: () => request<string[]>('/tags'),
+
+  reopenTask: (id: string) => request<Task>(`/tasks/${id}/reopen`, { method: 'PATCH' }),
+
+  updateNotes: (id: string, notes: string) =>
+    request<Task>(`/tasks/${id}/notes`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes }),
+    }),
+
+  deleteTask: (id: string) => request<void>(`/tasks/${id}`, { method: 'DELETE' }),
 };
 
 // Standalone builds (see vite.demo.config.ts) run entirely client-side against

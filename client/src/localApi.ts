@@ -110,6 +110,7 @@ export const localApi: TodayApi = {
       reopen_count: 0,
       is_subtask,
       parent_task_id: input.parent_task_id ?? null,
+      notes: null,
     };
 
     all.push(task);
@@ -191,5 +192,34 @@ export const localApi: TodayApi = {
       if (t.tag) tags.add(t.tag);
     }
     return [...tags].sort();
+  },
+
+  async reopenTask(id: string): Promise<Task> {
+    const all = load();
+    const task = all.find((t) => t.id === id);
+    if (!task) throw new Error('not found');
+    if (task.status !== 'archived') throw new Error('only archived tasks can be reopened');
+    task.status = 'pending';
+    task.date_completed = null;
+    task.time_completed = null;
+    task.reopen_count += 1;
+    save(all);
+    return task;
+  },
+
+  async updateNotes(id: string, notes: string): Promise<Task> {
+    const all = load();
+    const task = all.find((t) => t.id === id);
+    if (!task) throw new Error('not found');
+    task.notes = notes.trim() || null;
+    save(all);
+    return task;
+  },
+
+  async deleteTask(id: string): Promise<void> {
+    const all = load();
+    if (!all.some((t) => t.id === id)) throw new Error('not found');
+    const remaining = all.filter((t) => t.id !== id && t.parent_task_id !== id);
+    save(remaining);
   },
 };

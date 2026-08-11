@@ -18,6 +18,7 @@ export default function App() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [refreshSummary, setRefreshSummary] = useState<{ tasks_to_archive: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
 
   const loadTasks = useCallback(async (category: Category) => {
     setLoading(true);
@@ -135,6 +136,41 @@ export default function App() {
     }
   }
 
+  async function handleReopen(id: string) {
+    setArchiveTasks((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await api.reopenTask(id);
+      setToast('Task reopened — back on its active list');
+    } catch (e) {
+      setError((e as Error).message);
+      loadArchive();
+    }
+  }
+
+  async function handleSaveNotes(id: string, notes: string) {
+    setArchiveTasks((prev) => prev.map((t) => (t.id === id ? { ...t, notes: notes.trim() || null } : t)));
+    try {
+      await api.updateNotes(id, notes);
+    } catch (e) {
+      setError((e as Error).message);
+      loadArchive();
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    setDeleteTarget(null);
+    setArchiveTasks((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await api.deleteTask(id);
+      setToast('Task deleted');
+    } catch (e) {
+      setError((e as Error).message);
+      loadArchive();
+    }
+  }
+
   return (
     <div className="app-shell">
       <TopBar view={view} onSelectView={(v) => setView(v as View)} onRefreshDay={openRefreshConfirm} />
@@ -147,7 +183,14 @@ export default function App() {
 
       {!error && loading && <div className="empty-state">Loading…</div>}
 
-      {!error && !loading && view === 'archive' && <ArchiveView tasks={archiveTasks} />}
+      {!error && !loading && view === 'archive' && (
+        <ArchiveView
+          tasks={archiveTasks}
+          onReopen={handleReopen}
+          onSaveNotes={handleSaveNotes}
+          onRequestDelete={setDeleteTarget}
+        />
+      )}
 
       {!error && !loading && view !== 'archive' && (
         <>
@@ -168,6 +211,17 @@ export default function App() {
           confirmLabel="Refresh Day"
           onConfirm={confirmRefresh}
           onCancel={() => setConfirmOpen(false)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmModal
+          title="Delete this task?"
+          body={`"${deleteTarget.text}" will be permanently removed. This can't be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
 

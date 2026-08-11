@@ -16,6 +16,7 @@ export interface Task {
   reopen_count: number;
   is_subtask: 0 | 1;
   parent_task_id: string | null;
+  notes: string | null;
 }
 
 export interface RefreshSummary {
@@ -44,6 +45,9 @@ export interface TodayApi {
   getRefreshSummary(): Promise<RefreshSummary>;
   refreshDay(): Promise<RefreshResult>;
   getTags(): Promise<string[]>;
+  reopenTask(id: string): Promise<Task>;
+  updateNotes(id: string, notes: string): Promise<Task>;
+  deleteTask(id: string): Promise<void>;
 }
 
 export const TABS: { key: Category; label: string }[] = [

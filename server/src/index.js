@@ -180,6 +180,52 @@ app.patch('/api/tasks/:id', (req, res) => {
   res.json(updated);
 });
 
+// PATCH /api/tasks/:id/reopen -> archived task moves back to its category's active list, pending
+app.patch('/api/tasks/:id/reopen', (req, res) => {
+  const { id } = req.params;
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  if (!task) return res.status(404).json({ error: 'not found' });
+  if (task.status !== 'archived') return res.status(400).json({ error: 'only archived tasks can be reopened' });
+
+  db.prepare(
+    `UPDATE tasks SET status = 'pending', date_completed = NULL, time_completed = NULL, reopen_count = reopen_count + 1 WHERE id = ?`
+  ).run(id);
+
+  const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  res.json(updated);
+});
+
+// PATCH /api/tasks/:id/notes -> add/edit a short notes field (allowed on archived tasks too)
+app.patch('/api/tasks/:id/notes', (req, res) => {
+  const { id } = req.params;
+  const { notes } = req.body;
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  if (!task) return res.status(404).json({ error: 'not found' });
+
+  db.prepare('UPDATE tasks SET notes = ? WHERE id = ?').run(
+    typeof notes === 'string' && notes.trim() ? notes.trim() : null,
+    id
+  );
+
+  const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  res.json(updated);
+});
+
+// DELETE /api/tasks/:id -> permanently remove the task (and any subtasks, to avoid orphaned references)
+app.delete('/api/tasks/:id', (req, res) => {
+  const { id } = req.params;
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  if (!task) return res.status(404).json({ error: 'not found' });
+
+  const run = db.transaction(() => {
+    db.prepare('DELETE FROM tasks WHERE parent_task_id = ?').run(id);
+    db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  });
+  run();
+
+  res.status(204).end();
+});
+
 // POST /api/refresh-day -> archive all done tasks, log the event
 app.post('/api/refresh-day', (req, res) => {
   const { refresh_timestamp } = req.body;

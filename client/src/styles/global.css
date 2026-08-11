@@ -189,6 +189,22 @@ select {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.btn-danger {
+  background: var(--priority-high-bg);
+  border: 1px solid var(--priority-high-border);
+  color: var(--priority-high-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 11px 18px;
+  transition: filter 150ms ease;
+}
+
+.btn-danger:hover {
+  filter: brightness(1.15);
+}
+
 /* Task list */
 .task-list {
   display: flex;
@@ -548,6 +564,55 @@ select {
 .archive-row-meta .cat-tag {
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.archive-row-notes {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+.archive-notes-edit {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.archive-notes-input {
+  flex: 1;
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.archive-notes-input:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.archive-row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.archive-row-actions .btn-secondary,
+.archive-row-actions .btn-danger {
+  padding: 8px 14px;
+  font-size: 0.68rem;
 }
 
 /* Modal */
