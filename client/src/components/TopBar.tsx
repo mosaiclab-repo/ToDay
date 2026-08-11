@@ -51,7 +51,10 @@ export default function TopBar({
   return (
     <div className="top-bar">
       <div className="top-bar-row">
-        <span className="date-label">{today}</span>
+        <div className="brand-date-stack">
+          <span className="wordmark">To.Day</span>
+          <span className="date-label">{today}</span>
+        </div>
         <div className="top-bar-actions">
           <InfoPopover />
           <button type="button" className="btn-primary" onClick={onRefreshDay}>

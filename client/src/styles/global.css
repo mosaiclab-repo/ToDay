@@ -173,6 +173,21 @@ select {
   line-height: 1.5;
 }
 
+.brand-date-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wordmark {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  opacity: 0.8;
+}
+
 .date-label {
   font-family: var(--font-mono);
   font-size: 0.7rem;
