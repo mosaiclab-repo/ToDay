@@ -182,10 +182,10 @@ select {
 .wordmark {
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  letter-spacing: 0.01em;
-  opacity: 0.8;
+  font-size: 2.45rem; /* exactly 3.5x the 0.7rem date-label below it */
+  line-height: 1;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .date-label {
