@@ -83,7 +83,7 @@ export default function App() {
     }
   }
 
-  async function handleAddTask(input: { text: string; priority: Priority; tag?: string }) {
+  async function handleAddTask(input: { text: string; priority: Priority; tags?: string[] }) {
     if (view === 'archive') return;
     try {
       const created = await api.createTask({ ...input, category: view });

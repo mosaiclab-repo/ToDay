@@ -6,7 +6,7 @@ export interface Task {
   id: string;
   text: string;
   category: Category;
-  tag: string | null;
+  tags: string[];
   priority: Priority;
   status: Status;
   date_created: string;
@@ -36,7 +36,7 @@ export interface TodayApi {
     text: string;
     category: Category;
     priority?: Priority;
-    tag?: string;
+    tags?: string[];
     parent_task_id?: string;
   }): Promise<Task>;
   toggleTask(id: string): Promise<Task>;

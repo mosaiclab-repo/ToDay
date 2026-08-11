@@ -18,7 +18,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     text TEXT NOT NULL,
     category TEXT NOT NULL CHECK(category IN ('client', 'business_ops', 'personal')),
-    tag TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
     priority TEXT NOT NULL DEFAULT 'medium' CHECK(priority IN ('high', 'medium', 'low')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'done', 'archived')),
     date_created TEXT NOT NULL,
@@ -51,4 +51,24 @@ if (existingColumns.includes('client_name') && !existingColumns.includes('tag'))
 }
 if (!existingColumns.includes('notes')) {
   db.exec('ALTER TABLE tasks ADD COLUMN notes TEXT');
+}
+
+// Migrate the single-value `tag` column into the multi-value `tags` JSON array column.
+const columnsBeforeTagsMigration = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
+if (!columnsBeforeTagsMigration.includes('tags')) {
+  db.exec("ALTER TABLE tasks ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'");
+  if (columnsBeforeTagsMigration.includes('tag')) {
+    const rows = db.prepare('SELECT id, tag FROM tasks').all();
+    const update = db.prepare('UPDATE tasks SET tags = ? WHERE id = ?');
+    const run = db.transaction(() => {
+      for (const row of rows) update.run(JSON.stringify(row.tag ? [row.tag] : []), row.id);
+    });
+    run();
+    try {
+      db.exec('ALTER TABLE tasks DROP COLUMN tag');
+    } catch {
+      // Older SQLite builds may not support DROP COLUMN; the now-unused
+      // `tag` column is simply left in place, harmless.
+    }
+  }
 }

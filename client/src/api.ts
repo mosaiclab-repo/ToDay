@@ -34,7 +34,7 @@ const remoteApi: TodayApi = {
     text: string;
     category: Category;
     priority?: Priority;
-    tag?: string;
+    tags?: string[];
     parent_task_id?: string;
   }) =>
     request<Task>('/tasks', {

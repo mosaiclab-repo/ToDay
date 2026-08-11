@@ -37,7 +37,11 @@ export default function TaskRow({
         <div className="task-content">
           <span className={`task-text ${done ? 'done' : ''}`}>{task.text}</span>
           {pastDue && <span className="tag tag-past-due">since {formatShortDate(task.date_created)}</span>}
-          {task.tag && <span className="tag tag-badge">{task.tag}</span>}
+          {task.tags.map((t) => (
+            <span key={t} className="tag tag-badge">
+              {t}
+            </span>
+          ))}
           <PriorityTag
             priority={task.priority}
             onClick={() => onPriorityChange(task.id, nextPriority(task.priority))}

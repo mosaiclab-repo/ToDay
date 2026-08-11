@@ -15,13 +15,23 @@ function load(): Task[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const tasks = JSON.parse(raw) as Array<Task & { client_name?: string | null }>;
-    // Migrate tasks stored before client_name was renamed to tag, so existing
-    // browser data isn't lost.
+    const tasks = JSON.parse(raw) as Array<
+      Task & { client_name?: string | null; tag?: string | null }
+    >;
+    // Migrate tasks stored under earlier field names/shapes so existing browser
+    // data isn't lost: client_name (single value) -> tag (single value) -> tags (array).
     let migrated = false;
     for (const t of tasks) {
-      if (t.tag === undefined && t.client_name !== undefined) {
-        t.tag = t.client_name;
+      if (t.tags === undefined) {
+        const single = t.tag !== undefined ? t.tag : t.client_name;
+        t.tags = single ? [single] : [];
+        migrated = true;
+      }
+      if (t.tag !== undefined) {
+        delete t.tag;
+        migrated = true;
+      }
+      if (t.client_name !== undefined) {
         delete t.client_name;
         migrated = true;
       }
@@ -77,7 +87,7 @@ export const localApi: TodayApi = {
     text: string;
     category: Category;
     priority?: Priority;
-    tag?: string;
+    tags?: string[];
     parent_task_id?: string;
   }): Promise<Task> {
     const all = load();
@@ -96,11 +106,16 @@ export const localApi: TodayApi = {
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
 
+    const resolvedTags =
+      category === 'client' && Array.isArray(input.tags)
+        ? [...new Set(input.tags.map((t) => t.trim()).filter(Boolean))]
+        : [];
+
     const task: Task = {
       id: uuid(),
       text: input.text.trim(),
       category,
-      tag: category === 'client' && input.tag ? input.tag.trim() : null,
+      tags: resolvedTags,
       priority: input.priority ?? 'medium',
       status: 'pending',
       date_created: `${y}-${m}-${d}`,
@@ -189,7 +204,7 @@ export const localApi: TodayApi = {
     const all = load();
     const tags = new Set<string>();
     for (const t of all) {
-      if (t.tag) tags.add(t.tag);
+      for (const tag of t.tags) tags.add(tag);
     }
     return [...tags].sort();
   },

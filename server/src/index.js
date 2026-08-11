@@ -30,6 +30,19 @@ function orderWithSubtasks(topLevel, subtasksByParent) {
   return out;
 }
 
+// `tags` is stored as a JSON array string; parse it back out for API responses.
+function withParsedTags(row) {
+  if (!row) return row;
+  let tags = [];
+  try {
+    tags = JSON.parse(row.tags ?? '[]');
+    if (!Array.isArray(tags)) tags = [];
+  } catch {
+    tags = [];
+  }
+  return { ...row, tags };
+}
+
 // GET /api/tasks?category=client  -> active (pending + done) tasks for a category, oldest date_created first
 app.get('/api/tasks', (req, res) => {
   const { category } = req.query;
@@ -66,7 +79,7 @@ app.get('/api/tasks', (req, res) => {
     }
   }
 
-  res.json(orderWithSubtasks(rootLevel, subtasksByParent));
+  res.json(orderWithSubtasks(rootLevel, subtasksByParent).map(withParsedTags));
 });
 
 // GET /api/refresh-day/summary -> counts across all active tasks, for the confirmation prompt
@@ -83,20 +96,24 @@ app.get('/api/archive', (req, res) => {
       `SELECT * FROM tasks WHERE status = 'archived' ORDER BY date_completed DESC, time_completed DESC, rowid DESC`
     )
     .all();
-  res.json(rows);
+  res.json(rows.map(withParsedTags));
 });
 
 // GET /api/tags -> distinct tag values used so far, for autocomplete suggestions
 app.get('/api/tags', (req, res) => {
-  const rows = db
-    .prepare(`SELECT DISTINCT tag FROM tasks WHERE tag IS NOT NULL AND tag != '' ORDER BY tag ASC`)
-    .all();
-  res.json(rows.map((r) => r.tag));
+  const rows = db.prepare(`SELECT tags FROM tasks WHERE tags IS NOT NULL AND tags != '[]'`).all();
+  const tagSet = new Set();
+  for (const row of rows) {
+    for (const t of withParsedTags(row).tags) {
+      if (t) tagSet.add(t);
+    }
+  }
+  res.json([...tagSet].sort());
 });
 
 // POST /api/tasks -> create a task or subtask
 app.post('/api/tasks', (req, res) => {
-  const { text, category, tag, priority, parent_task_id, date_created, time_created } = req.body;
+  const { text, category, tags, priority, parent_task_id, date_created, time_created } = req.body;
 
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'text is required' });
@@ -117,19 +134,23 @@ app.post('/api/tasks', (req, res) => {
   }
 
   const resolvedPriority = PRIORITIES.includes(priority) ? priority : 'medium';
+  const resolvedTags =
+    resolvedCategory === 'client' && Array.isArray(tags)
+      ? [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))]
+      : [];
 
   const id = uuidv4();
   const dCreated = date_created || nowServerDate();
   const tCreated = time_created || nowServerTime();
 
   db.prepare(
-    `INSERT INTO tasks (id, text, category, tag, priority, status, date_created, time_created, is_subtask, parent_task_id)
+    `INSERT INTO tasks (id, text, category, tags, priority, status, date_created, time_created, is_subtask, parent_task_id)
      VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
   ).run(
     id,
     text.trim(),
     resolvedCategory,
-    resolvedCategory === 'client' && tag ? tag.trim() : null,
+    JSON.stringify(resolvedTags),
     resolvedPriority,
     dCreated,
     tCreated,
@@ -138,7 +159,7 @@ app.post('/api/tasks', (req, res) => {
   );
 
   const created = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-  res.status(201).json(created);
+  res.status(201).json(withParsedTags(created));
 });
 
 // PATCH /api/tasks/:id/toggle -> flip pending <-> done
@@ -160,7 +181,7 @@ app.patch('/api/tasks/:id/toggle', (req, res) => {
   }
 
   const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-  res.json(updated);
+  res.json(withParsedTags(updated));
 });
 
 // PATCH /api/tasks/:id -> edit priority (the only field the spec calls out as editable anytime)
@@ -177,7 +198,7 @@ app.patch('/api/tasks/:id', (req, res) => {
   }
 
   const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-  res.json(updated);
+  res.json(withParsedTags(updated));
 });
 
 // PATCH /api/tasks/:id/reopen -> archived task moves back to its category's active list, pending
@@ -192,7 +213,7 @@ app.patch('/api/tasks/:id/reopen', (req, res) => {
   ).run(id);
 
   const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-  res.json(updated);
+  res.json(withParsedTags(updated));
 });
 
 // PATCH /api/tasks/:id/notes -> add/edit a short notes field (allowed on archived tasks too)
@@ -208,7 +229,7 @@ app.patch('/api/tasks/:id/notes', (req, res) => {
   );
 
   const updated = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-  res.json(updated);
+  res.json(withParsedTags(updated));
 });
 
 // DELETE /api/tasks/:id -> permanently remove the task (and any subtasks, to avoid orphaned references)

@@ -10,11 +10,11 @@ export default function AddTaskForm({
   onAdd,
 }: {
   category: Category;
-  onAdd: (input: { text: string; priority: Priority; tag?: string }) => void;
+  onAdd: (input: { text: string; priority: Priority; tags?: string[] }) => void;
 }) {
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
-  const [tag, setTag] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -26,14 +26,14 @@ export default function AddTaskForm({
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
-    const trimmedTag = tag.trim();
-    onAdd({ text: trimmed, priority, tag: trimmedTag || undefined });
-    if (trimmedTag && !tagSuggestions.includes(trimmedTag)) {
-      setTagSuggestions((prev) => [...prev, trimmedTag].sort());
+    onAdd({ text: trimmed, priority, tags: tags.length ? tags : undefined });
+    const newTags = tags.filter((t) => !tagSuggestions.includes(t));
+    if (newTags.length) {
+      setTagSuggestions((prev) => [...prev, ...newTags].sort());
     }
     setText('');
     setPriority('medium');
-    setTag('');
+    setTags([]);
   }
 
   return (
@@ -58,7 +58,7 @@ export default function AddTaskForm({
           ))}
         </div>
         {category === 'client' && (
-          <TagInput value={tag} onChange={setTag} suggestions={tagSuggestions} placeholder="Tag (optional)" />
+          <TagInput value={tags} onChange={setTags} suggestions={tagSuggestions} placeholder="Tag" />
         )}
       </div>
       <div className="add-task-submit-row">

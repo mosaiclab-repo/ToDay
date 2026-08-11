@@ -516,33 +516,83 @@ select {
   align-items: center;
 }
 
-.add-task-client {
+.tag-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 160px;
+}
+
+.tag-input-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  padding: 9px 12px;
+  padding: 7px 10px;
+  transition: border-color 150ms ease;
+}
+
+.tag-input-field-row:focus-within {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.tag-input-field {
+  flex: 1;
+  min-width: 70px;
+  background: none;
+  border: none;
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 0.78rem;
   outline: none;
-  flex: 1;
-  min-width: 120px;
-  transition: border-color 150ms ease;
+  padding: 3px 2px;
 }
 
-.add-task-client:focus {
-  border-color: rgba(255, 255, 255, 0.35);
+.tag-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
-.tag-input-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 120px;
+.tag-bubble-selected {
+  color: var(--tag-badge-text);
+  background: var(--tag-badge-bg);
+  border: 1px solid var(--tag-badge-border);
 }
 
-.tag-input-wrap .add-task-client {
-  width: 100%;
-  min-width: 0;
+.tag-bubble-remove {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.75;
+  transition: opacity 120ms ease;
+}
+
+.tag-bubble-remove:hover {
+  opacity: 1;
+}
+
+.tag-bubble-suggestion {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.tag-bubble-suggestion:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .tag-input-dropdown {
@@ -555,29 +605,13 @@ select {
   border: 1px solid var(--panel-border);
   border-radius: 10px;
   box-shadow: var(--panel-shadow);
-  padding: 6px;
+  padding: 8px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 6px;
   max-height: 180px;
   overflow-y: auto;
   z-index: 10;
-}
-
-.tag-input-option {
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  padding: 7px 9px;
-  border-radius: 7px;
-  transition: background 120ms ease;
-}
-
-.tag-input-option:hover {
-  background: rgba(255, 255, 255, 0.08);
 }
 
 .priority-select {
