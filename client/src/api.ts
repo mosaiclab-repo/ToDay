@@ -1,4 +1,5 @@
-import type { Category, Priority, RefreshResult, RefreshSummary, Task } from './types';
+import type { Category, Priority, RefreshResult, RefreshSummary, Task, TodayApi } from './types';
+import { localApi } from './localApi';
 
 const BASE = '/api';
 
@@ -25,7 +26,7 @@ function localTime(d = new Date()): string {
   return d.toTimeString().slice(0, 8);
 }
 
-export const api = {
+const remoteApi: TodayApi = {
   getTasks: (category: Category) => request<Task[]>(`/tasks?category=${category}`),
 
   createTask: (input: {
@@ -69,5 +70,10 @@ export const api = {
       body: JSON.stringify({ refresh_timestamp: new Date().toISOString() }),
     }),
 };
+
+// Standalone builds (see vite.demo.config.ts) run entirely client-side against
+// localStorage instead of the Express/SQLite server, so the app can be opened
+// as a single file with no server to run.
+export const api = import.meta.env.VITE_STANDALONE === 'true' ? localApi : remoteApi;
 
 export { localDate, localTime };

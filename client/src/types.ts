@@ -29,6 +29,22 @@ export interface RefreshResult {
   refresh_timestamp: string;
 }
 
+export interface TodayApi {
+  getTasks(category: Category): Promise<Task[]>;
+  createTask(input: {
+    text: string;
+    category: Category;
+    priority?: Priority;
+    client_name?: string;
+    parent_task_id?: string;
+  }): Promise<Task>;
+  toggleTask(id: string): Promise<Task>;
+  setPriority(id: string, priority: Priority): Promise<Task>;
+  getArchive(): Promise<Task[]>;
+  getRefreshSummary(): Promise<RefreshSummary>;
+  refreshDay(): Promise<RefreshResult>;
+}
+
 export const TABS: { key: Category; label: string }[] = [
   { key: 'client', label: 'Client Work' },
   { key: 'business_ops', label: 'Business Ops' },

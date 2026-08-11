@@ -38,31 +38,35 @@ app.get('/api/tasks', (req, res) => {
   }
 
   const params = [];
-  let where = "status IN ('pending','done') AND is_subtask = 0";
+  let where = "status IN ('pending','done')";
   if (category) {
     where += ' AND category = ?';
     params.push(category);
   }
 
-  const topLevel = db
+  // Sorted once, oldest date_created first — both the root-level query below and
+  // each parent's subtasks reuse this order rather than re-sorting.
+  const active = db
     .prepare(`SELECT * FROM tasks WHERE ${where} ORDER BY date_created ASC, rowid ASC`)
     .all(...params);
+  const activeIds = new Set(active.map((t) => t.id));
 
+  // A subtask renders under its parent only while that parent is still active.
+  // If the parent was archived (Refresh Day) while the subtask stayed pending,
+  // the subtask falls back to rendering at the root level instead of vanishing —
+  // nothing is ever silently hidden.
   const subtasksByParent = new Map();
-  if (topLevel.length) {
-    const placeholders = topLevel.map(() => '?').join(',');
-    const subtasks = db
-      .prepare(
-        `SELECT * FROM tasks WHERE parent_task_id IN (${placeholders}) AND status IN ('pending','done') ORDER BY rowid ASC`
-      )
-      .all(...topLevel.map((t) => t.id));
-    for (const s of subtasks) {
-      if (!subtasksByParent.has(s.parent_task_id)) subtasksByParent.set(s.parent_task_id, []);
-      subtasksByParent.get(s.parent_task_id).push(s);
+  const rootLevel = [];
+  for (const t of active) {
+    if (t.is_subtask && t.parent_task_id && activeIds.has(t.parent_task_id)) {
+      if (!subtasksByParent.has(t.parent_task_id)) subtasksByParent.set(t.parent_task_id, []);
+      subtasksByParent.get(t.parent_task_id).push(t);
+    } else {
+      rootLevel.push(t);
     }
   }
 
-  res.json(orderWithSubtasks(topLevel, subtasksByParent));
+  res.json(orderWithSubtasks(rootLevel, subtasksByParent));
 });
 
 // GET /api/refresh-day/summary -> counts across all active tasks, for the confirmation prompt
