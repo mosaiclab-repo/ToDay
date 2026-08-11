@@ -125,6 +125,21 @@ select {
   box-shadow: var(--panel-shadow);
 }
 
+.tab-pill-edit {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  padding: 9px 16px;
+  outline: none;
+  width: 13em;
+  max-width: 55vw;
+}
+
 .archive-link {
   font-family: var(--font-mono);
   font-size: 0.72rem;
