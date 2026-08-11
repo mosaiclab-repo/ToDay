@@ -18,7 +18,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     text TEXT NOT NULL,
     category TEXT NOT NULL CHECK(category IN ('client', 'business_ops', 'personal')),
-    client_name TEXT,
+    tag TEXT,
     priority TEXT NOT NULL DEFAULT 'medium' CHECK(priority IN ('high', 'medium', 'low')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'done', 'archived')),
     date_created TEXT NOT NULL,
@@ -41,3 +41,10 @@ db.exec(`
     tasks_carried_count INTEGER NOT NULL
   );
 `);
+
+// Migrate pre-existing databases: the client_name column was renamed to the
+// more general `tag`, so existing task data carries forward instead of being lost.
+const existingColumns = db.prepare('PRAGMA table_info(tasks)').all().map((c) => c.name);
+if (existingColumns.includes('client_name') && !existingColumns.includes('tag')) {
+  db.exec('ALTER TABLE tasks RENAME COLUMN client_name TO tag');
+}

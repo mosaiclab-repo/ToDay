@@ -6,7 +6,7 @@ export interface Task {
   id: string;
   text: string;
   category: Category;
-  client_name: string | null;
+  tag: string | null;
   priority: Priority;
   status: Status;
   date_created: string;
@@ -35,7 +35,7 @@ export interface TodayApi {
     text: string;
     category: Category;
     priority?: Priority;
-    client_name?: string;
+    tag?: string;
     parent_task_id?: string;
   }): Promise<Task>;
   toggleTask(id: string): Promise<Task>;
@@ -43,6 +43,7 @@ export interface TodayApi {
   getArchive(): Promise<Task[]>;
   getRefreshSummary(): Promise<RefreshSummary>;
   refreshDay(): Promise<RefreshResult>;
+  getTags(): Promise<string[]>;
 }
 
 export const TABS: { key: Category; label: string }[] = [

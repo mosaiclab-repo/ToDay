@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Category, Priority } from '../types';
+import { api } from '../api';
+import TagInput from './TagInput';
 
 const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
 
@@ -8,20 +10,30 @@ export default function AddTaskForm({
   onAdd,
 }: {
   category: Category;
-  onAdd: (input: { text: string; priority: Priority; client_name?: string }) => void;
+  onAdd: (input: { text: string; priority: Priority; tag?: string }) => void;
 }) {
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
-  const [clientName, setClientName] = useState('');
+  const [tag, setTag] = useState('');
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (category !== 'client') return;
+    api.getTags().then(setTagSuggestions).catch(() => setTagSuggestions([]));
+  }, [category]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
-    onAdd({ text: trimmed, priority, client_name: clientName.trim() || undefined });
+    const trimmedTag = tag.trim();
+    onAdd({ text: trimmed, priority, tag: trimmedTag || undefined });
+    if (trimmedTag && !tagSuggestions.includes(trimmedTag)) {
+      setTagSuggestions((prev) => [...prev, trimmedTag].sort());
+    }
     setText('');
     setPriority('medium');
-    setClientName('');
+    setTag('');
   }
 
   return (
@@ -46,12 +58,7 @@ export default function AddTaskForm({
           ))}
         </div>
         {category === 'client' && (
-          <input
-            className="add-task-client"
-            placeholder="Client name (optional)"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-          />
+          <TagInput value={tag} onChange={setTag} suggestions={tagSuggestions} placeholder="Tag (optional)" />
         )}
       </div>
       <div className="add-task-submit-row">

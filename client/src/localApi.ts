@@ -14,7 +14,20 @@ function uuid(): string {
 function load(): Task[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const tasks = JSON.parse(raw) as Array<Task & { client_name?: string | null }>;
+    // Migrate tasks stored before client_name was renamed to tag, so existing
+    // browser data isn't lost.
+    let migrated = false;
+    for (const t of tasks) {
+      if (t.tag === undefined && t.client_name !== undefined) {
+        t.tag = t.client_name;
+        delete t.client_name;
+        migrated = true;
+      }
+    }
+    if (migrated) save(tasks);
+    return tasks;
   } catch {
     return [];
   }
@@ -64,7 +77,7 @@ export const localApi: TodayApi = {
     text: string;
     category: Category;
     priority?: Priority;
-    client_name?: string;
+    tag?: string;
     parent_task_id?: string;
   }): Promise<Task> {
     const all = load();
@@ -87,7 +100,7 @@ export const localApi: TodayApi = {
       id: uuid(),
       text: input.text.trim(),
       category,
-      client_name: category === 'client' && input.client_name ? input.client_name.trim() : null,
+      tag: category === 'client' && input.tag ? input.tag.trim() : null,
       priority: input.priority ?? 'medium',
       status: 'pending',
       date_created: `${y}-${m}-${d}`,
@@ -169,5 +182,14 @@ export const localApi: TodayApi = {
       tasks_carried_count: carried.length,
       refresh_timestamp: new Date().toISOString(),
     };
+  },
+
+  async getTags(): Promise<string[]> {
+    const all = load();
+    const tags = new Set<string>();
+    for (const t of all) {
+      if (t.tag) tags.add(t.tag);
+    }
+    return [...tags].sort();
   },
 };

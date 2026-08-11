@@ -19,6 +19,10 @@
   --priority-low-text: #6be3ac;
   --priority-low-border: rgba(110, 227, 172, 0.35);
 
+  --tag-badge-bg: rgba(129, 140, 248, 0.16);
+  --tag-badge-text: #a5b4fc;
+  --tag-badge-border: rgba(129, 140, 248, 0.35);
+
   --font-sans: 'Space Grotesk', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
@@ -311,10 +315,10 @@ select {
   border-color: var(--priority-low-border);
 }
 
-.tag-client {
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.tag-badge {
+  color: var(--tag-badge-text);
+  background: var(--tag-badge-bg);
+  border: 1px solid var(--tag-badge-border);
 }
 
 .subtask-add-btn {
@@ -394,6 +398,52 @@ select {
 
 .add-task-client:focus {
   border-color: rgba(255, 255, 255, 0.35);
+}
+
+.tag-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+}
+
+.tag-input-wrap .add-task-client {
+  width: 100%;
+  min-width: 0;
+}
+
+.tag-input-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: rgba(20, 20, 24, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  box-shadow: var(--panel-shadow);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.tag-input-option {
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 7px 9px;
+  border-radius: 7px;
+  transition: background 120ms ease;
+}
+
+.tag-input-option:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .priority-select {

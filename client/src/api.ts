@@ -33,7 +33,7 @@ const remoteApi: TodayApi = {
     text: string;
     category: Category;
     priority?: Priority;
-    client_name?: string;
+    tag?: string;
     parent_task_id?: string;
   }) =>
     request<Task>('/tasks', {
@@ -69,6 +69,8 @@ const remoteApi: TodayApi = {
       method: 'POST',
       body: JSON.stringify({ refresh_timestamp: new Date().toISOString() }),
     }),
+
+  getTags: () => request<string[]>('/tags'),
 };
 
 // Standalone builds (see vite.demo.config.ts) run entirely client-side against

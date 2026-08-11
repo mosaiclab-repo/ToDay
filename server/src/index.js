@@ -86,9 +86,17 @@ app.get('/api/archive', (req, res) => {
   res.json(rows);
 });
 
+// GET /api/tags -> distinct tag values used so far, for autocomplete suggestions
+app.get('/api/tags', (req, res) => {
+  const rows = db
+    .prepare(`SELECT DISTINCT tag FROM tasks WHERE tag IS NOT NULL AND tag != '' ORDER BY tag ASC`)
+    .all();
+  res.json(rows.map((r) => r.tag));
+});
+
 // POST /api/tasks -> create a task or subtask
 app.post('/api/tasks', (req, res) => {
-  const { text, category, client_name, priority, parent_task_id, date_created, time_created } = req.body;
+  const { text, category, tag, priority, parent_task_id, date_created, time_created } = req.body;
 
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'text is required' });
@@ -115,13 +123,13 @@ app.post('/api/tasks', (req, res) => {
   const tCreated = time_created || nowServerTime();
 
   db.prepare(
-    `INSERT INTO tasks (id, text, category, client_name, priority, status, date_created, time_created, is_subtask, parent_task_id)
+    `INSERT INTO tasks (id, text, category, tag, priority, status, date_created, time_created, is_subtask, parent_task_id)
      VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
   ).run(
     id,
     text.trim(),
     resolvedCategory,
-    resolvedCategory === 'client' && client_name ? client_name.trim() : null,
+    resolvedCategory === 'client' && tag ? tag.trim() : null,
     resolvedPriority,
     dCreated,
     tCreated,
