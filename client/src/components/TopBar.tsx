@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { TABS } from '../types';
 import type { Category } from '../types';
 import { useTabLabels } from '../hooks/useTabLabels';
+import InfoPopover from './InfoPopover';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = [
@@ -51,9 +52,12 @@ export default function TopBar({
     <div className="top-bar">
       <div className="top-bar-row">
         <span className="date-label">{today}</span>
-        <button type="button" className="btn-primary" onClick={onRefreshDay}>
-          Refresh Day
-        </button>
+        <div className="top-bar-actions">
+          <InfoPopover />
+          <button type="button" className="btn-primary" onClick={onRefreshDay}>
+            Refresh Day
+          </button>
+        </div>
       </div>
       <div className="top-bar-row">
         <div className="tab-bar">
